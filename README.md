@@ -1,4 +1,4 @@
-# Olá, eu sou Nikla Marca! 👋
+# Olá, eu sou Nicolas Lamarca! 👋
 
 ## 🚀 Sobre mim
 
