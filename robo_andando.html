@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robô Andando</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: monospace;
+      color: #eee;
+    }
+
+    h1 { margin-bottom: 20px; font-size: 1.4rem; letter-spacing: 2px; color: #00d4ff; }
+
+    #scene {
+      width: 700px;
+      height: 220px;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 4px solid #00d4ff;
+      background: #16213e;
+    }
+
+    /* Chão com grid */
+    #ground {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 200%;
+      height: 30px;
+      background: repeating-linear-gradient(
+        90deg,
+        #0f3460 0px, #0f3460 40px,
+        #1a4a80 40px, #1a4a80 80px
+      );
+      animation: moveGround 1.2s linear infinite;
+    }
+
+    @keyframes moveGround {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-80px); }
+    }
+
+    /* Robô */
+    #robot {
+      position: absolute;
+      bottom: 30px;
+      left: 80px;
+      width: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Cabeça */
+    .head {
+      width: 40px;
+      height: 34px;
+      background: #00d4ff;
+      border-radius: 6px 6px 3px 3px;
+      position: relative;
+      border: 2px solid #0099bb;
+      animation: headBob 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes headBob {
+      from { transform: translateY(0px); }
+      to   { transform: translateY(-3px); }
+    }
+
+    .eye {
+      width: 8px;
+      height: 8px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      position: absolute;
+      top: 10px;
+      animation: blink 3s step-end infinite;
+    }
+    .eye.left  { left: 7px; }
+    .eye.right { right: 7px; }
+
+    @keyframes blink {
+      0%, 95%, 100% { transform: scaleY(1); }
+      97%           { transform: scaleY(0.1); }
+    }
+
+    .antenna {
+      width: 3px;
+      height: 10px;
+      background: #00d4ff;
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .antenna::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      background: #ff6b6b;
+      border-radius: 50%;
+      position: absolute;
+      top: -7px;
+      left: -2px;
+      animation: antennaBlink 1s ease-in-out infinite alternate;
+    }
+    @keyframes antennaBlink {
+      from { opacity: 1; }
+      to   { opacity: 0.2; }
+    }
+
+    /* Corpo */
+    .body {
+      width: 50px;
+      height: 44px;
+      background: #0099bb;
+      border-radius: 4px;
+      border: 2px solid #007a99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: bodyBob 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes bodyBob {
+      from { transform: translateY(0px); }
+      to   { transform: translateY(-2px); }
+    }
+
+    .chest-light {
+      width: 14px;
+      height: 14px;
+      background: #00ff88;
+      border-radius: 3px;
+      animation: chestPulse 0.8s ease-in-out infinite alternate;
+      box-shadow: 0 0 8px #00ff88;
+    }
+
+    @keyframes chestPulse {
+      from { opacity: 1; }
+      to   { opacity: 0.4; }
+    }
+
+    /* Braços */
+    .arms {
+      position: absolute;
+      top: 34px; /* abaixo da cabeça */
+      width: 80px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .arm {
+      width: 12px;
+      height: 36px;
+      background: #0099bb;
+      border-radius: 6px;
+      border: 2px solid #007a99;
+      transform-origin: top center;
+    }
+
+    .arm.left  { animation: armLeft  0.6s ease-in-out infinite alternate; }
+    .arm.right { animation: armRight 0.6s ease-in-out infinite alternate; }
+
+    @keyframes armLeft {
+      from { transform: rotate(-25deg); }
+      to   { transform: rotate(25deg); }
+    }
+    @keyframes armRight {
+      from { transform: rotate(25deg); }
+      to   { transform: rotate(-25deg); }
+    }
+
+    /* Pernas */
+    .legs {
+      display: flex;
+      gap: 6px;
+      position: relative;
+    }
+
+    .leg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform-origin: top center;
+    }
+
+    .thigh {
+      width: 14px;
+      height: 28px;
+      background: #007a99;
+      border-radius: 4px;
+      border: 2px solid #005f7a;
+    }
+
+    .foot {
+      width: 20px;
+      height: 10px;
+      background: #005f7a;
+      border-radius: 3px;
+      margin-top: 2px;
+    }
+
+    .leg.left  { animation: legLeft  0.6s ease-in-out infinite alternate; }
+    .leg.right { animation: legRight 0.6s ease-in-out infinite alternate; }
+
+    @keyframes legLeft {
+      from { transform: rotate(-20deg) translateY(0); }
+      to   { transform: rotate(20deg) translateY(0); }
+    }
+    @keyframes legRight {
+      from { transform: rotate(20deg) translateY(0); }
+      to   { transform: rotate(-20deg) translateY(0); }
+    }
+
+    /* Partículas de fundo */
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: twinkle 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.2; }
+      to   { opacity: 0.9; }
+    }
+
+    /* Controles */
+    #controls {
+      margin-top: 24px;
+      display: flex;
+      gap: 16px;
+    }
+
+    button {
+      padding: 10px 24px;
+      background: #00d4ff;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover  { background: #00ffee; }
+    button:active { transform: scale(0.96); }
+
+    #speedLabel { color: #00d4ff; font-size: 0.95rem; margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>ROBÔ ANDANDO</h1>
+
+<div id="scene">
+  <div id="ground"></div>
+
+  <div id="robot">
+    <div class="head">
+      <div class="antenna"></div>
+      <div class="eye left"></div>
+      <div class="eye right"></div>
+    </div>
+
+    <div class="arms">
+      <div class="arm left"></div>
+      <div class="arm right"></div>
+    </div>
+
+    <div class="body">
+      <div class="chest-light"></div>
+    </div>
+
+    <div class="legs">
+      <div class="leg left">
+        <div class="thigh"></div>
+        <div class="foot"></div>
+      </div>
+      <div class="leg right">
+        <div class="thigh"></div>
+        <div class="foot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <button onclick="changeSpeed(-0.2)">Devagar</button>
+  <button onclick="togglePause()">Pausar</button>
+  <button onclick="changeSpeed(0.2)">Rápido</button>
+</div>
+<div id="speedLabel">Velocidade: normal</div>
+
+<script>
+  // Adiciona estrelas de fundo
+  const scene = document.getElementById('scene');
+  for (let i = 0; i < 30; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top  = Math.random() * 60 + '%';
+    star.style.animationDelay = Math.random() * 2 + 's';
+    scene.appendChild(star);
+  }
+
+  let speed = 1.0;
+  let paused = false;
+
+  const robot  = document.getElementById('robot');
+  const ground = document.getElementById('ground');
+  const label  = document.getElementById('speedLabel');
+
+  // Aplica velocidade a todos os elementos animados do robô
+  const animatedParts = [
+    robot,
+    ground,
+    ...robot.querySelectorAll('*')
+  ];
+
+  function applySpeed() {
+    animatedParts.forEach(el => {
+      el.style.animationDuration = '';
+    });
+
+    const parts = robot.querySelectorAll('*');
+    const baseDurations = {
+      head:        0.6,
+      body:        0.6,
+      'arm left':  0.6,
+      'arm right': 0.6,
+      'leg left':  0.6,
+      'leg right': 0.6,
+      'chest-light': 0.8,
+      antenna:     1.0,
+    };
+
+    // Reaplica duração escalada pelo inverso da velocidade
+    parts.forEach(el => {
+      const classes = Array.from(el.classList);
+      for (const [cls, base] of Object.entries(baseDurations)) {
+        if (classes.includes(cls.split(' ')[0]) &&
+            (!cls.includes(' ') || classes.includes(cls.split(' ')[1]))) {
+          el.style.animationDuration = (base / speed) + 's';
+          break;
+        }
+      }
+    });
+
+    ground.style.animationDuration = (1.2 / speed) + 's';
+
+    const names = ['Lento', 'Normal', 'Rápido', 'Muito Rápido'];
+    const idx = speed <= 0.4 ? 0 : speed <= 0.8 ? 0 : speed <= 1.4 ? 1 : speed <= 2.0 ? 2 : 3;
+    label.textContent = `Velocidade: ${speed.toFixed(1)}x`;
+  }
+
+  function changeSpeed(delta) {
+    speed = Math.max(0.2, Math.min(4.0, speed + delta));
+    if (paused) return;
+    applySpeed();
+  }
+
+  function togglePause() {
+    paused = !paused;
+    const allAnimated = [ground, ...robot.querySelectorAll('*')];
+    allAnimated.forEach(el => {
+      el.style.animationPlayState = paused ? 'paused' : 'running';
+    });
+    document.querySelector('button:nth-child(2)').textContent = paused ? 'Continuar' : 'Pausar';
+  }
+</script>
+
+</body>
+</html>
