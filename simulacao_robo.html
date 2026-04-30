@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robô Rinoceronte - FIAP Robocup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d1a;
+      color: #eee;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 { color: #ff6600; font-size: 1.4rem; letter-spacing: 3px; margin-bottom: 4px; }
+    .sub { color: #888; font-size: 0.75rem; margin-bottom: 20px; }
+
+    /* Arena */
+    #arena {
+      width: 560px;
+      height: 420px;
+      background: #111122;
+      border: 3px solid #333;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Grade da arena */
+    #arena::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Bordas da arena (paredes) */
+    .wall-label {
+      position: absolute;
+      font-size: 0.65rem;
+      color: #555;
+      letter-spacing: 1px;
+    }
+    .wall-label.top    { top: 6px; left: 50%; transform: translateX(-50%); }
+    .wall-label.bottom { bottom: 6px; left: 50%; transform: translateX(-50%); }
+    .wall-label.left   { left: 6px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+    .wall-label.right  { right: 6px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+
+    /* Robô - visão de cima */
+    #robot {
+      position: absolute;
+      width: 64px;
+      height: 80px;
+      transition: left 0.05s linear, top 0.05s linear;
+    }
+
+    #robot-body {
+      position: absolute;
+      inset: 14px 4px 4px 4px;
+      background: #cc4400;
+      border-radius: 6px 6px 10px 10px;
+      border: 2px solid #ff6600;
+      box-shadow: 0 0 12px rgba(255,102,0,0.4);
+    }
+
+    /* Detalhe frente do robô */
+    #robot-front {
+      position: absolute;
+      top: 14px; left: 4px; right: 4px;
+      height: 14px;
+      background: #ff6600;
+      border-radius: 6px 6px 0 0;
+      border: 2px solid #ffaa00;
+    }
+
+    /* Rodas */
+    .wheel {
+      position: absolute;
+      width: 10px;
+      height: 24px;
+      background: #222;
+      border: 2px solid #555;
+      border-radius: 3px;
+    }
+    .wheel.fl { top: 18px; left: -4px; }
+    .wheel.fr { top: 18px; right: -4px; }
+    .wheel.bl { bottom: 8px; left: -4px; }
+    .wheel.br { bottom: 8px; right: -4px; }
+
+    /* Chifre retrátil */
+    #horn {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 14px; /* recolhido = pequeno */
+      background: linear-gradient(to top, #888, #ddd);
+      border-radius: 4px 4px 1px 1px;
+      transition: height 0.25s ease, top 0.25s ease, box-shadow 0.25s ease;
+      z-index: 2;
+    }
+
+    #horn.estendido {
+      height: 36px;
+      top: -22px;
+      background: linear-gradient(to top, #aaa, #fff);
+      box-shadow: 0 0 16px #fff, 0 -4px 24px rgba(255,255,255,0.6);
+    }
+
+    /* Indicador de direção */
+    #dir-arrow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: rgba(255,200,0,0.7);
+      border-radius: 50%;
+    }
+
+    /* Trilha de movimento */
+    .trail {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 102, 0, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: fadeTrail 0.8s forwards;
+    }
+    @keyframes fadeTrail {
+      to { opacity: 0; transform: scale(0.2); }
+    }
+
+    /* Painel */
+    #panel {
+      width: 560px;
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .card {
+      flex: 1;
+      background: #111122;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .card h3 { font-size: 0.7rem; color: #ff6600; letter-spacing: 2px; margin-bottom: 10px; }
+
+    /* Controles WASD */
+    #dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 44px);
+      grid-template-rows: repeat(3, 44px);
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .btn {
+      width: 44px; height: 44px;
+      background: #1a1a33;
+      border: 2px solid #333;
+      border-radius: 6px;
+      color: #ccc;
+      font-family: monospace;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none;
+      transition: background 0.08s, border-color 0.08s, transform 0.05s;
+    }
+
+    .btn:hover   { border-color: #ff6600; color: #ff6600; }
+    .btn.active  { background: #ff6600; color: #fff; border-color: #ffaa00; transform: scale(0.93); }
+    .btn.empty   { visibility: hidden; }
+    .btn.horn    { width: 96px; background: #220011; border-color: #660033; color: #ff3388; }
+    .btn.horn.active { background: #ff3388; color: #fff; }
+
+    /* Status */
+    #status-list { list-style: none; }
+    #status-list li { font-size: 0.72rem; padding: 3px 0; border-bottom: 1px solid #1a1a2e; }
+    #status-list li span { color: #ff6600; }
+
+    /* Log */
+    #log {
+      height: 90px;
+      overflow-y: auto;
+      font-size: 0.7rem;
+      color: #aaa;
+      border: 1px solid #1a1a2e;
+      padding: 6px;
+      border-radius: 4px;
+    }
+    #log p { margin: 2px 0; }
+    #log p.acao { color: #ff6600; }
+    #log p.ataque { color: #ff3388; font-weight: bold; }
+
+    /* Teclas de atalho */
+    .keys { font-size: 0.65rem; color: #666; margin-top: 8px; line-height: 1.8; }
+    .key { display: inline-block; background: #1a1a2e; border: 1px solid #333; border-radius: 3px; padding: 1px 5px; color: #aaa; }
+
+    /* Flash de ataque na arena */
+    #attack-flash {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 50, 130, 0.0);
+      pointer-events: none;
+      transition: background 0.1s;
+    }
+    #attack-flash.flash { background: rgba(255, 50, 130, 0.18); }
+  </style>
+</head>
+<body>
+
+<h1>ROBO RINOCERONTE</h1>
+<div class="sub">FIAP ROBOCUP — SIMULACAO DE CONTROLE</div>
+
+<div id="arena">
+  <div id="attack-flash"></div>
+  <span class="wall-label top">PAREDE NORTE</span>
+  <span class="wall-label bottom">PAREDE SUL</span>
+  <span class="wall-label left">OESTE</span>
+  <span class="wall-label right">LESTE</span>
+
+  <div id="robot">
+    <div id="horn"></div>
+    <div id="robot-front"></div>
+    <div id="robot-body">
+      <div id="dir-arrow"></div>
+    </div>
+    <div class="wheel fl"></div>
+    <div class="wheel fr"></div>
+    <div class="wheel bl"></div>
+    <div class="wheel br"></div>
+  </div>
+</div>
+
+<div id="panel">
+
+  <!-- Controles direcionais -->
+  <div class="card">
+    <h3>MOVIMENTO</h3>
+    <div id="dpad">
+      <div class="btn empty"></div>
+      <div class="btn" id="btn-F" data-cmd="F">▲</div>
+      <div class="btn empty"></div>
+
+      <div class="btn" id="btn-L" data-cmd="L">◄</div>
+      <div class="btn" id="btn-S" data-cmd="S">■</div>
+      <div class="btn" id="btn-R" data-cmd="R">►</div>
+
+      <div class="btn" id="btn-Q" data-cmd="Q" title="Estrafa Esq" style="font-size:0.6rem">◄▲</div>
+      <div class="btn" id="btn-B" data-cmd="B">▼</div>
+      <div class="btn" id="btn-E" data-cmd="E" title="Estrafa Dir" style="font-size:0.6rem">▲►</div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:8px;gap:8px;">
+      <div class="btn horn" id="btn-A" data-cmd="A">⚡ ATACAR</div>
+      <div class="btn horn" id="btn-X" data-cmd="X" style="width:96px">↩ RECOLHER</div>
+    </div>
+    <div class="keys">
+      <span class="key">W</span>Frente &nbsp;
+      <span class="key">S</span>Ré &nbsp;
+      <span class="key">A</span>Esq &nbsp;
+      <span class="key">D</span>Dir &nbsp;
+      <span class="key">Space</span>Atacar &nbsp;
+      <span class="key">X</span>Recolher
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="card">
+    <h3>STATUS</h3>
+    <ul id="status-list">
+      <li>Posição X: <span id="st-x">248</span></li>
+      <li>Posição Y: <span id="st-y">170</span></li>
+      <li>Direção: <span id="st-dir">Norte</span></li>
+      <li>Velocidade: <span id="st-vel">180</span>/255</li>
+      <li>Chifre: <span id="st-horn">Recolhido</span></li>
+      <li>Estado: <span id="st-state">Parado</span></li>
+    </ul>
+    <div style="margin-top:10px;">
+      <h3 style="margin-bottom:6px;">LOG</h3>
+      <div id="log"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const ARENA_W = 560, ARENA_H = 420;
+  const ROBOT_W = 64,  ROBOT_H = 80;
+
+  const robot    = document.getElementById('robot');
+  const horn     = document.getElementById('horn');
+  const flash    = document.getElementById('attack-flash');
+  const log      = document.getElementById('log');
+
+  const stX      = document.getElementById('st-x');
+  const stY      = document.getElementById('st-y');
+  const stDir    = document.getElementById('st-dir');
+  const stVel    = document.getElementById('st-vel');
+  const stHorn   = document.getElementById('st-horn');
+  const stState  = document.getElementById('st-state');
+
+  // Estado do robô
+  let rx = ARENA_W / 2 - ROBOT_W / 2;
+  let ry = ARENA_H / 2 - ROBOT_H / 2;
+  let angle = 0;      // 0 = Norte, 90 = Leste, 180 = Sul, 270 = Oeste
+  let speed = 3;
+  let chifreOut = false;
+  let currentCmd = null;
+  let trailTimer = 0;
+  const pressed = new Set();
+
+  const SPEED_BASE = 3;
+  const DIRS = ['Norte','Leste','Sul','Oeste'];
+
+  function addLog(msg, cls = '') {
+    const p = document.createElement('p');
+    p.className = cls;
+    p.textContent = `> ${msg}`;
+    log.prepend(p);
+    if (log.children.length > 40) log.removeChild(log.lastChild);
+  }
+
+  function updateStatus() {
+    stX.textContent     = Math.round(rx + ROBOT_W / 2);
+    stY.textContent     = Math.round(ry + ROBOT_H / 2);
+    stDir.textContent   = DIRS[Math.round(((angle % 360) + 360) % 360 / 90) % 4];
+    stVel.textContent   = Math.round(speed / SPEED_BASE * 180);
+    stHorn.textContent  = chifreOut ? 'ESTENDIDO' : 'Recolhido';
+    stHorn.style.color  = chifreOut ? '#ff3388' : '#ff6600';
+    stState.textContent = currentCmd ? currentCmd : 'Parado';
+  }
+
+  function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+  // Desenha trilha
+  function spawnTrail() {
+    const t = document.createElement('div');
+    t.className = 'trail';
+    t.style.left = (rx + ROBOT_W / 2 - 2) + 'px';
+    t.style.top  = (ry + ROBOT_H / 2 - 2) + 'px';
+    document.getElementById('arena').appendChild(t);
+    setTimeout(() => t.remove(), 800);
+  }
+
+  // Aplica rotação CSS ao robô
+  function renderRobot() {
+    robot.style.left      = rx + 'px';
+    robot.style.top       = ry + 'px';
+    robot.style.transform = `rotate(${angle}deg)`;
+  }
+
+  // Movimentos
+  function moveFrente() {
+    const rad = (angle - 90) * Math.PI / 180;
+    rx += Math.cos(rad) * speed;
+    ry += Math.sin(rad) * speed;
+    rx = clamp(rx, 0, ARENA_W - ROBOT_W);
+    ry = clamp(ry, 0, ARENA_H - ROBOT_H);
+    currentCmd = 'Frente';
+  }
+
+  function moveRe() {
+    const rad = (angle - 90) * Math.PI / 180;
+    rx -= Math.cos(rad) * speed;
+    ry -= Math.sin(rad) * speed;
+    rx = clamp(rx, 0, ARENA_W - ROBOT_W);
+    ry = clamp(ry, 0, ARENA_H - ROBOT_H);
+    currentCmd = 'Ré';
+  }
+
+  function girarEsq() { angle -= 3; currentCmd = 'Girando Esq'; }
+  function girarDir() { angle += 3; currentCmd = 'Girando Dir'; }
+
+  function estrafaEsq() {
+    const rad = (angle - 180) * Math.PI / 180;
+    rx += Math.cos(rad) * speed * 0.7;
+    ry += Math.sin(rad) * speed * 0.7;
+    rx = clamp(rx, 0, ARENA_W - ROBOT_W);
+    ry = clamp(ry, 0, ARENA_H - ROBOT_H);
+    currentCmd = 'Estrafa Esq';
+  }
+
+  function estrafaDir() {
+    const rad = angle * Math.PI / 180;
+    rx += Math.cos(rad) * speed * 0.7;
+    ry += Math.sin(rad) * speed * 0.7;
+    rx = clamp(rx, 0, ARENA_W - ROBOT_W);
+    ry = clamp(ry, 0, ARENA_H - ROBOT_H);
+    currentCmd = 'Estrafa Dir';
+  }
+
+  function atacar() {
+    if (!chifreOut) {
+      chifreOut = true;
+      horn.classList.add('estendido');
+      flash.classList.add('flash');
+      setTimeout(() => flash.classList.remove('flash'), 150);
+      addLog('CARGA DO RINOCERONTE!', 'ataque');
+      // Ativa botão visualmente
+      document.getElementById('btn-A').classList.add('active');
+      setTimeout(() => document.getElementById('btn-A').classList.remove('active'), 300);
+    }
+  }
+
+  function recolher() {
+    if (chifreOut) {
+      chifreOut = false;
+      horn.classList.remove('estendido');
+      addLog('Chifre recolhido.', 'acao');
+    }
+  }
+
+  // Loop principal
+  function gameLoop() {
+    currentCmd = null;
+
+    if (pressed.has('w') || pressed.has('arrowup'))    moveFrente();
+    if (pressed.has('s') || pressed.has('arrowdown'))  moveRe();
+    if (pressed.has('a') || pressed.has('arrowleft'))  girarEsq();
+    if (pressed.has('d') || pressed.has('arrowright')) girarDir();
+    if (pressed.has('q')) estrafaEsq();
+    if (pressed.has('e')) estrafaDir();
+
+    // Trilha a cada N frames
+    trailTimer++;
+    if (trailTimer % 6 === 0 && currentCmd && currentCmd !== 'Parado') spawnTrail();
+
+    renderRobot();
+    updateStatus();
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Teclado
+  document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','q','e',' ','x'].includes(k)) {
+      e.preventDefault();
+    }
+    pressed.add(k);
+    if (k === ' ')  atacar();
+    if (k === 'x')  recolher();
+  });
+
+  document.addEventListener('keyup', e => {
+    pressed.delete(e.key.toLowerCase());
+  });
+
+  // Botões na tela
+  document.querySelectorAll('.btn[data-cmd]').forEach(btn => {
+    const cmd = btn.dataset.cmd;
+
+    const cmdMap = {
+      F: moveFrente, B: moveRe,
+      L: girarEsq,   R: girarDir,
+      Q: estrafaEsq, E: estrafaDir,
+      S: () => { currentCmd = 'Parado'; },
+      A: atacar,     X: recolher,
+    };
+
+    // Pressionar e segurar para os botões de movimento
+    let interval = null;
+
+    btn.addEventListener('mousedown', () => {
+      btn.classList.add('active');
+      cmdMap[cmd]?.();
+      if (['F','B','L','R','Q','E'].includes(cmd)) {
+        interval = setInterval(() => cmdMap[cmd]?.(), 16);
+      }
+    });
+
+    const stop = () => {
+      btn.classList.remove('active');
+      if (interval) { clearInterval(interval); interval = null; }
+    };
+
+    btn.addEventListener('mouseup',   stop);
+    btn.addEventListener('mouseleave', stop);
+    btn.addEventListener('touchstart', e => { e.preventDefault(); btn.dispatchEvent(new Event('mousedown')); });
+    btn.addEventListener('touchend',   e => { e.preventDefault(); stop(); });
+  });
+
+  // Inicializa
+  addLog('Robô Rinoceronte pronto.', 'acao');
+  addLog('Use WASD / setas para mover.');
+  addLog('Espaço = ATACAR  |  X = recolher chifre');
+  renderRobot();
+  requestAnimationFrame(gameLoop);
+</script>
+
+</body>
+</html>
