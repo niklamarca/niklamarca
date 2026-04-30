@@ -10,7 +10,10 @@
 //   VCC  → 5V do Arduino
 //   GND  → GND do Arduino
 //   TX   → Pin 19 (RX1) do MEGA
-//   RX   → Pin 18 (TX1) do MEGA  (use divisor de tensão!)
+//   RX   → Pin 18 (TX1) do MEGA
+//          IMPORTANTE: o RX do HC-06 é 3.3V. O TX1 do MEGA é 5V.
+//          Use divisor de tensão: TX1 → R1(1kΩ) → RX HC-06
+//                                                    └ R2(2kΩ) → GND
 //
 // [Servo MG995 - Chifre]
 //   Laranja (Sinal) → Pin 44 do MEGA
@@ -29,14 +32,15 @@
 //   GND   → GND
 //
 // [LED RGB 5050 com BD135]
-//   Base R → Resistor 4k7 → Pin 11
-//   Base G → Resistor 4k7 → Pin 12
-//   Base B → Resistor 4k7 → Pin 13
+//   Base R → Resistor 4k7 → Pin 2
+//   Base G → Resistor 4k7 → Pin 9
+//   Base B → Resistor 4k7 → Pin 10
 //   Emissor de cada BD135 → GND
 //   Coletor R → fio vermelho da fita
 //   Coletor G → fio verde da fita
 //   Coletor B → fio azul da fita
 //   VCC fita  → 12V ou fonte adequada
+//   (pinos 11/12/13 NÃO podem ser usados — são ocupados pela AFMotor)
 //
 // [Shield L293D]
 //   Encaixar diretamente no Arduino MEGA
@@ -79,9 +83,9 @@
 // LED RGB 5050 via Transistores BD135
 // ================================================================
 #ifdef LED_RGB5050
-  #define LED_R_PIN   11   // PWM
-  #define LED_G_PIN   12   // PWM
-  #define LED_B_PIN   13   // PWM
+  #define LED_R_PIN   2    // PWM Timer 3
+  #define LED_G_PIN   9    // PWM Timer 2
+  #define LED_B_PIN   10   // PWM Timer 2
 #endif
 
 // ================================================================

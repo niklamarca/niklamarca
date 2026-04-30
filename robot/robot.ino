@@ -33,9 +33,10 @@ Servo      hornServo;
 // ================================================================
 // ESTADO GLOBAL
 // ================================================================
-int  velocidade    = VEL_PADRAO;
-bool chifreFora    = false;
-char ultimoCmd     = 'S';
+int           velocidade        = VEL_PADRAO;
+bool          chifreFora        = false;
+unsigned long chifreDispParaoEm = 0;     // millis() em que deve recolher (0 = manual)
+char          ultimoCmd         = 'S';
 
 // ================================================================
 // MOTORES
@@ -141,11 +142,23 @@ void chifreSetup() {
 void dispararChifre() {
   hornServo.write(HORN_EXTENDED_DEG);
   chifreFora = true;
+  if (HORN_ATTACK_DELAY > 0) {
+    chifreDispParaoEm = millis() + HORN_ATTACK_DELAY;
+  }
 }
 
 void recolherChifre() {
   hornServo.write(HORN_RETRACTED_DEG);
   chifreFora = false;
+  chifreDispParaoEm = 0;
+}
+
+// Recolhe automaticamente o chifre depois de HORN_ATTACK_DELAY ms
+void atualizarChifre() {
+  if (chifreFora && chifreDispParaoEm != 0 && millis() >= chifreDispParaoEm) {
+    recolherChifre();
+    ledParado();
+  }
 }
 
 // ================================================================
@@ -302,4 +315,5 @@ void loop() {
   }
 
   verificarSensores();
+  atualizarChifre();
 }
