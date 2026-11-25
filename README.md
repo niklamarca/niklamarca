@@ -1,42 +1,13 @@
-# Olá, eu sou Nicolas Lamarca! 👋
+# Hi, I'm Nicolas
 
-## 🚀 Sobre mim
+I'm from São Paulo and I study Information Systems at FIAP. Before that I spent about 8 months as a junior QA analyst at Real Price Technology, mostly manual testing with some Selenium automation.
 
-- 🌱 Atualmente estou aprendendo **programação e desenvolvimento web**
--  💻 Iniciando minha jornada no mundo da tecnologia
-  - 🎯 Objetivo: me tornar um desenvolvedor(a) completo(a)
-    - 📍 Baseado(a) no **Brasil**
-      - 😄 Aberto(a) a colaborações e novos aprendizados!
-       
-        ---
+Most of my free time goes into [QHOS](https://github.com/niklamarca/QHOS), a trading system I'm building in Python. The first version was a research setup: asyncio, a FastAPI/WebSocket dashboard, DuckDB and Parquet for storage, a PyTorch regime model, genetic strategy search with Claude API agents, walk-forward and Monte Carlo backtests, and a risk engine with a kill switch. Now I'm rebuilding it smaller. The new version runs on Linux, receives live CME futures data through Rithmic and saves a clean dataset every trading day. Training models on that data is the next step.
 
-        ## 🛠️ Tecnologias que estou aprendendo
+At FIAP I also built Radar Chama with a classmate, an IoT project using ESP32 and LoRa.
 
-        ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-        ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-        ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-        ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
-        ![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)
+**What I use:** Python, pytest, Selenium, FastAPI, SQL (DuckDB), Git, Linux
 
-        ---
+**Languages:** Portuguese (native), English (fluent), Spanish (basic)
 
-        ## 📊 Estatísticas do GitHub
-
-        <div align="center">
-          <img height="180em" src="https://github-readme-stats.vercel.app/api?username=niklamarca&show_icons=true&theme=radical&include_all_commits=true&count_private=true&custom_title=Nicolas+Lamarca%27s+GitHub+Stats"/>
-            <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=niklamarca&layout=compact&langs_count=7&theme=radical"/>
-        </div>
-
-        ---
-
-        ## 📫 Como me encontrar
-
-        [![GitHub](https://img.shields.io/badge/GitHub-niklamarca-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/niklamarca)
-
-        ---
-
-        <div align="center">
-          <img src="https://komarev.com/ghpvc/?username=niklamarca&color=blueviolet&style=flat-square&label=Visitantes" alt="Profile views" />
-        </div>
-
-        ⭐ **Obrigado(a) por visitar meu perfil!** ⭐
+I'm looking for remote QA or junior Python backend roles.
